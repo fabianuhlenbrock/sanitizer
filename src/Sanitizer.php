@@ -64,7 +64,7 @@ class Sanitizer
         // Process global sanitizers.
         $this->runGlobalSanitizers($rules, $data);
 
-        $availableRules = array_only($rules, array_keys($data));
+        $availableRules = array_only($rules, array_keys(array_dot($data)));
 
         // Iterate rules to be applied.
         foreach ($availableRules as $field => $ruleset) {
