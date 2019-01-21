@@ -61,18 +61,29 @@ class Sanitizer
      */
     public function sanitize($rules, &$data)
     {
-        // Process global sanitizers.
-        $this->runGlobalSanitizers($rules, $data);
+            // Process global sanitizers.
+            $this->runGlobalSanitizers($rules, $data);
 
-        $availableRules = array_only($rules, array_keys(array_dot($data)));
+            $generatedRules = [];
+            $availableRules = array_keys(array_dot($data));
 
-        // Iterate rules to be applied.
-        foreach ($availableRules as $field => $ruleset) {
+            //Check for dotted rules
+            array_walk($availableRules,
+                function($item) use (&$generatedRules, $rules) {
+                    $dotRule = preg_replace('/[.]\d+[.]/m', ".*.", $item);
 
-            // Execute sanitizers over a specific field.
-            $this->sanitizeField($data, $field, $ruleset);
-        }
-        return $data;
+                    if(array_has($rules, $dotRule)) {
+                        $generatedRules[$item] = $rules[$dotRule];
+                    }
+                }
+            );
+
+            foreach ($generatedRules as $field => $ruleset) {
+
+                // Execute sanitizers over a specific field.
+                $this->sanitizeField($data, $field, $ruleset);
+            }
+            return $data;
     }
 
     /**
