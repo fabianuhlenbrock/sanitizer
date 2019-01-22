@@ -4,6 +4,7 @@ namespace Rees\Sanitizer;
 
 use Closure;
 use Illuminate\Container\Container;
+use Illimoinate\Validation\ValidationRuleParser;
 
 class Sanitizer
 {
@@ -64,21 +65,11 @@ class Sanitizer
             // Process global sanitizers.
             $this->runGlobalSanitizers($rules, $data);
 
-            $generatedRules = [];
-            $availableRules = array_keys(array_dot($data));
+            $parser = new ValidationRuleParser(parent::validationData());
 
-            //Check for dotted rules
-            array_walk($availableRules,
-                function($item) use (&$generatedRules, $rules) {
-                    $dotRule = preg_replace('/[.]\d+[.]/m', ".*.", $item);
+            $availableRules = $parser->explode($this->rules())->rules;
 
-                    if(array_has($rules, $dotRule)) {
-                        $generatedRules[$item] = $rules[$dotRule];
-                    }
-                }
-            );
-
-            foreach ($generatedRules as $field => $ruleset) {
+            foreach ($availableRules as $field => $ruleset) {
 
                 // Execute sanitizers over a specific field.
                 $this->sanitizeField($data, $field, $ruleset);
